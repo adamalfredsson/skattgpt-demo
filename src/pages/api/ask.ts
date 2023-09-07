@@ -10,6 +10,10 @@ const openai = new OpenAI({
 async function ask(question: string, history: Message[]) {
   const res = await openai.chat.completions.create({
     messages: [
+      {
+        role: "system",
+        content: "Du är en expert som svarar på skattefrågor.",
+      },
       ...history,
       {
         role: "user",
