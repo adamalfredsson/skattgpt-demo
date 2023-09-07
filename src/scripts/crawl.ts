@@ -1,4 +1,37 @@
 import { CheerioCrawler, createCheerioRouter } from "crawlee";
+import TurndownService from "turndown";
+
+const turndown = new TurndownService({
+  headingStyle: "atx",
+});
+
+turndown.remove([
+  "script",
+  "style",
+  "picture",
+  "noscript",
+  "iframe",
+  "audio",
+  "video",
+  "form",
+  "input",
+  "button",
+  "nav",
+]);
+
+turndown.addRule("removeHrefs", {
+  filter: "a",
+  replacement: (content) => content,
+});
+
+turndown.addRule("removeImages", {
+  filter: "img",
+  replacement: (content) => "",
+});
+
+function htmlToMarkdown(html: string) {
+  return turndown.turndown(html);
+}
 
 const URL = "https://www.skatteverket.se";
 
@@ -13,7 +46,9 @@ router.addDefaultHandler(async ({ $, enqueueLinks, request }) => {
     throw new Error("Too many content elements");
   }
 
-  console.log($content.text());
+  const content = htmlToMarkdown($content.html() || "");
+
+  console.log(content);
 
   await enqueueLinks({});
 });
