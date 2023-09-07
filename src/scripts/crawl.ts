@@ -1,4 +1,5 @@
-import { CheerioCrawler, createCheerioRouter } from "crawlee";
+import { CheerioCrawler, Dataset, createCheerioRouter } from "crawlee";
+import fs from "fs/promises";
 import TurndownService from "turndown";
 
 const turndown = new TurndownService({
@@ -35,25 +36,37 @@ function htmlToMarkdown(html: string) {
 
 const URL = "https://www.skatteverket.se";
 
-const router = createCheerioRouter();
-
-router.addDefaultHandler(async ({ $, enqueueLinks, request }) => {
-  console.log(request.url);
-
-  const $content = $(".print-expand");
-
-  if ($content.length > 1) {
-    throw new Error("Too many content elements");
-  }
-
-  const content = htmlToMarkdown($content.html() || "");
-
-  console.log(content);
-
-  await enqueueLinks({});
-});
-
 const crawl = async () => {
+  await fs.rm("storage/datasets", { recursive: true, force: true });
+
+  const router = createCheerioRouter();
+
+  const dataset = await Dataset.open("skatteverket");
+
+  router.addDefaultHandler(async ({ $, enqueueLinks, request }) => {
+    console.log(request.url);
+
+    const $content = $(".print-expand");
+
+    if ($content.length > 1) {
+      throw new Error("Too many content elements");
+    }
+
+    const content = htmlToMarkdown($content.html() || "");
+
+    const title = $("h1").text();
+
+    if (content && title) {
+      dataset.pushData({
+        url: request.loadedUrl || request.url,
+        title,
+        content,
+      });
+    }
+
+    await enqueueLinks({});
+  });
+
   const crawler = new CheerioCrawler({
     requestHandler: router,
     maxRequestsPerCrawl: 5,
