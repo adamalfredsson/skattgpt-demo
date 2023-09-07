@@ -64,12 +64,13 @@ const crawl = async () => {
       });
     }
 
-    await enqueueLinks({});
+    await enqueueLinks({
+      regexps: [/^https:\/\/www\.skatteverket\.se\/privat\/.*/],
+    });
   });
 
   const crawler = new CheerioCrawler({
     requestHandler: router,
-    maxRequestsPerCrawl: 5,
   });
 
   await crawler.run([URL]);
