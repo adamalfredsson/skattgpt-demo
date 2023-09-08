@@ -13,21 +13,20 @@ const parse = async () => {
   await resetDataset("chunks");
   const chunksDataset = await Dataset.open<Chunk>("chunks");
 
-  for (const page of pages.slice(0, 2)) {
+  for (const page of pages) {
     const textSplitter = new MarkdownTextSplitter({
       chunkSize: 1000,
       chunkOverlap: 100,
     });
     const chunks = await textSplitter.splitText(page.content);
-
-    for (const chunk of chunks) {
-      await chunksDataset.pushData({
-        id: uuid(page.url, "00000000-0000-0000-0000-000000000000"),
+    await chunksDataset.pushData(
+      chunks.map((chunk, i) => ({
+        id: uuid(`${page.url}-${i}`, "00000000-0000-0000-0000-000000000000"),
         title: page.title,
         url: page.url,
         content: chunk,
-      });
-    }
+      }))
+    );
   }
 };
 

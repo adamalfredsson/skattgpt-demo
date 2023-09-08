@@ -64,7 +64,10 @@ const crawl = async () => {
     }
 
     await enqueueLinks({
-      regexps: [/^https:\/\/www\.skatteverket\.se\/privat\/.*/],
+      regexps: [/^https:\/\/www\.skatteverket\.se\/privat\/skatter\/.*/],
+      exclude: [
+        /^https:\/\/www\.skatteverket\.se\/privat\/skatter\/vardepapper\/aktiehistorik.*/,
+      ],
     });
   });
 
