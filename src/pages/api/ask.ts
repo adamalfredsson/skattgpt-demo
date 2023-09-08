@@ -20,13 +20,14 @@ async function ask(question: string, history: Message[]) {
     messages: [
       {
         role: "system",
-        content: "Du är en expert som svarar på skattefrågor.",
+        content:
+          "Du är en expert som svarar på skattefrågor. Använd alltid information från källorna för att svara, svara annars att du inte vet.",
       },
       ...history,
       {
         role: "user",
         content: dedent`
-          Använd följande information för att svara på frågan:
+          Använd följande källor för att svara på frågan:
           
           ${documents
             .map(
