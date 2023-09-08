@@ -1,9 +1,21 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import dedent from "dedent";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { type Message } from "..";
 import { openai } from "../../services/openai";
+import { COLLECTION_NAME, qdrant } from "../../services/qdrant";
 
 async function ask(question: string, history: Message[]) {
+  const questionVector = await openai.embeddings.create({
+    input: [question],
+    model: "text-embedding-ada-002",
+  });
+
+  const documents = await qdrant.search(COLLECTION_NAME, {
+    vector: questionVector.data[0].embedding,
+    limit: 4,
+  });
+
   const res = await openai.chat.completions.create({
     messages: [
       {
@@ -13,7 +25,23 @@ async function ask(question: string, history: Message[]) {
       ...history,
       {
         role: "user",
-        content: question,
+        content: dedent`
+          Använd följande information för att svara på frågan:
+          
+          ${documents
+            .map(
+              (document) => dedent`
+                ---
+                ${document.payload!.title}
+
+                ${document.payload!.content}
+                ---
+              `
+            )
+            .join("\n")}
+
+          Fråga: "${question}"
+        `,
       },
     ],
     model: "gpt-3.5-turbo",
