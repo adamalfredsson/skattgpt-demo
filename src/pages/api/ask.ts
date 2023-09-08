@@ -1,11 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import OpenAI from "openai";
 import { type Message } from "..";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { openai } from "../../services/openai";
 
 async function ask(question: string, history: Message[]) {
   const res = await openai.chat.completions.create({

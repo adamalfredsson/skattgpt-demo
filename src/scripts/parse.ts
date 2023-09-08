@@ -1,5 +1,8 @@
 import { Dataset } from "crawlee";
 import { MarkdownTextSplitter } from "langchain/text_splitter";
+import { v5 as uuid } from "uuid";
+import { Chunk } from "../types";
+import { resetDataset } from "../utils/dataset";
 
 const parse = async () => {
   const pagesDataset = await Dataset.open("skatteverket");
@@ -7,7 +10,8 @@ const parse = async () => {
 
   const pages = data.items;
 
-  const chunksDataset = await Dataset.open("chunks");
+  await resetDataset("chunks");
+  const chunksDataset = await Dataset.open<Chunk>("chunks");
 
   for (const page of pages.slice(0, 2)) {
     const textSplitter = new MarkdownTextSplitter({
@@ -18,6 +22,7 @@ const parse = async () => {
 
     for (const chunk of chunks) {
       await chunksDataset.pushData({
+        id: uuid(page.url, "00000000-0000-0000-0000-000000000000"),
         title: page.title,
         url: page.url,
         content: chunk,

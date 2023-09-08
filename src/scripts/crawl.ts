@@ -1,6 +1,6 @@
 import { CheerioCrawler, Dataset, createCheerioRouter } from "crawlee";
-import fs from "fs/promises";
 import TurndownService from "turndown";
+import { resetDataset } from "../utils/dataset";
 
 const turndown = new TurndownService({
   headingStyle: "atx",
@@ -37,10 +37,9 @@ function htmlToMarkdown(html: string) {
 const URL = "https://www.skatteverket.se";
 
 const crawl = async () => {
-  await fs.rm("storage/datasets", { recursive: true, force: true });
-
   const router = createCheerioRouter();
 
+  await resetDataset("skatteverket");
   const dataset = await Dataset.open("skatteverket");
 
   router.addDefaultHandler(async ({ $, enqueueLinks, request }) => {
