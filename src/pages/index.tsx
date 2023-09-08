@@ -62,7 +62,13 @@ export default function Home() {
     async (question: string) => {
       const res = await fetch("/api/ask", {
         method: "POST",
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({
+          question,
+          history: state.history.map(({ message }) => ({
+            role: message.role,
+            content: message.content,
+          })),
+        }),
         headers: {
           "Content-Type": "application/json",
         },

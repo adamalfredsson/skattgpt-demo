@@ -37,12 +37,14 @@ async function ask(
       {
         role: "system",
         content:
-          "Du är en expert som svarar på skattefrågor. Du måste söka efter information från skatteverket för att svara på skattefrågor, svara annars att du inte vet.",
+          "Du är en expert som svarar på skattefrågor. Det är dödsviktigt att du ENDAST använder information från skatteverket för att svara på skattefrågor, svara annars att du inte vet.",
       },
       ...history,
       {
         role: "user",
-        content: question,
+        content: dedent`
+          ${question}
+        `,
       },
       ...(documents.length
         ? [
@@ -80,6 +82,7 @@ async function ask(
       },
     ],
     model: "gpt-3.5-turbo",
+    temperature: 0,
   });
 
   const message = res.choices[0].message;
@@ -100,8 +103,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { question } = req.body;
-  const answer = await ask(question, []);
+  const { question, history } = req.body;
+  const answer = await ask(question, history);
 
   if (!answer.message.content) {
     throw new Error("No answer from OpenAI");
