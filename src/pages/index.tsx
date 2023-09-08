@@ -1,32 +1,50 @@
 import { Inter } from "next/font/google";
 import { useReducer, useRef } from "react";
 import { useMutation } from "react-query";
+import { Document, Message } from "../types";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
-
 type Conversation = {
-  messages: Message[];
+  history: {
+    message: Message;
+    documents?: Document[];
+  }[];
 };
 
-type Action = {
-  type: "addMessage";
-  payload: Message;
-};
+type Action =
+  | {
+      type: "addUserMessage";
+      payload: Message;
+    }
+  | {
+      type: "addAssistantMessage";
+      payload: {
+        message: Message;
+        documents: Document[];
+      };
+    };
 
 const conversationReducer = (
   state: Conversation,
   action: Action
 ): Conversation => {
   switch (action.type) {
-    case "addMessage":
+    case "addUserMessage":
       return {
         ...state,
-        messages: [...state.messages, action.payload],
+        history: [...state.history, { message: action.payload }],
+      };
+    case "addAssistantMessage":
+      return {
+        ...state,
+        history: [
+          ...state.history,
+          {
+            message: action.payload.message,
+            documents: action.payload.documents,
+          },
+        ],
       };
     default:
       return state;
@@ -37,7 +55,7 @@ export default function Home() {
   const formRef = useRef<HTMLFormElement>(null);
 
   const [state, dispatch] = useReducer(conversationReducer, {
-    messages: [],
+    history: [],
   });
 
   const ask = useMutation(
@@ -54,12 +72,12 @@ export default function Home() {
     {
       onMutate(question) {
         dispatch({
-          type: "addMessage",
+          type: "addUserMessage",
           payload: { role: "user", content: question },
         });
       },
       onSuccess(data) {
-        dispatch({ type: "addMessage", payload: data });
+        dispatch({ type: "addAssistantMessage", payload: data });
         formRef.current?.reset();
       },
     }
@@ -78,16 +96,35 @@ export default function Home() {
       className={`flex h-screen overflow-hidden flex-col justify-between ${inter.className}`}
     >
       <section className="flex-1 overflow-auto py-4 container flex flex-col gap-4">
-        {state.messages.map((message, i) => (
-          <div
-            key={i}
-            className={`p-4 rounded max-w-lg ${
-              message.role === "user"
-                ? "self-end bg-blue-500"
-                : "self-start bg-red-500"
-            }`}
-          >
-            {message.content}
+        {state.history.map(({ message, documents }, i) => (
+          <div className="flex flex-col gap-2">
+            <div
+              key={i}
+              className={`p-4 rounded max-w-lg ${
+                message.role === "user"
+                  ? "self-end bg-blue-500"
+                  : "self-start bg-red-500"
+              }`}
+            >
+              {message.content}
+            </div>
+            {documents ? (
+              <ul className="flex gap-2">
+                {documents.map((document) => (
+                  <li className="flex-1">
+                    <a
+                      className="p-4 rounded bg-gray-300 block text-black"
+                      href={document.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <strong>{document.title}</strong>
+                      <p>{document.content}</p>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         ))}
       </section>

@@ -1,9 +1,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import dedent from "dedent";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { type Message } from "..";
 import { openai } from "../../services/openai";
 import { COLLECTION_NAME, qdrant } from "../../services/qdrant";
+import { Message } from "../../types";
 
 async function ask(question: string, history: Message[]) {
   const questionVector = await openai.embeddings.create({
@@ -46,22 +46,33 @@ async function ask(question: string, history: Message[]) {
     ],
     model: "gpt-3.5-turbo",
   });
-  return res.choices[0].message;
+  return {
+    message: res.choices[0].message,
+    documents: documents.map((document) => ({
+      id: document.id as string,
+      title: document.payload!.title,
+      content: document.payload!.content,
+      url: document.payload!.url,
+    })),
+  };
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Message>
+  res: NextApiResponse
 ) {
   const { question } = req.body;
   const answer = await ask(question, []);
 
-  if (!answer.content) {
+  if (!answer.message.content) {
     throw new Error("No answer from OpenAI");
   }
 
   res.json({
-    content: answer.content,
-    role: "assistant",
+    message: {
+      content: answer.message.content,
+      role: "assistant",
+    },
+    documents: answer.documents,
   });
 }
