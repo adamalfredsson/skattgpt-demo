@@ -1,0 +1,9 @@
+version: "3.7"
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.2.2
+    ports:
+      - 6333:6333
+    volumes:
+      - ./storage/qdrant_storage:/qdrant/storage

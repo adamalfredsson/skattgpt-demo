@@ -9,9 +9,11 @@
     "lint": "next lint",
     "crawl": "tsx src/scripts/crawl",
     "parse": "tsx src/scripts/parse",
-    "embed": "tsx -r dotenv/config src/scripts/embed"
+    "embed": "tsx -r dotenv/config src/scripts/embed",
+    "upload": "tsx -r dotenv/config src/scripts/upload"
   },
   "dependencies": {
+    "@qdrant/js-client-rest": "^1.5.0",
     "@types/node": "20.5.9",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
